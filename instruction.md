@@ -18,11 +18,11 @@
 
 `runs` 里每次实验带 `run_id`、`initial_mass_mg`、`residual_mass_mg` 和 `points`。`points` 的每个元素有 `time_min`、`temperature_c`、`mass_mg`。
 
-转化率在初始质量时为 0，到残余质量时为 1。中间点按本次实验的总失重量归一。拿 12.0 mg 降到 3.0 mg 的实验来说，读到 7.5 mg 时正好是一半。返回 `{"runs": [{"run_id": "...", "conversion": [...]}, ...]}`。输出顺序照输入走，`conversion` 与同一次实验的 `points` 一一对应。
+转化率在初始质量时为 0，到残余质量时为 1。中间点按本次实验的总失重量归一。拿 12.0 mg 降到 3.0 mg 的实验来说，读到 7.5 mg 时正好是一半。称量抖动让质量略越过两个端点时，保留带符号的数值，不要截断到 0 或 1。`initial_mass_mg` 必须大于 `residual_mass_mg`，否则按坏请求处理。返回 `{"runs": [{"run_id": "...", "conversion": [...]}, ...]}`。输出顺序照输入走，`conversion` 与同一次实验的 `points` 一一对应。
 
 ### `identify`
 
-`runs` 至少有两次实验。每条记录自己的升温速度写在 `beta_k_per_min`，单位 K/min。另外两组是等长的 `temperature_c` 和 `conversion`，从前到后按升温顺序排。
+`runs` 至少有两次实验。每条记录自己的升温速度写在 `beta_k_per_min`，单位 K/min。另外两组是等长的 `temperature_c` 和 `conversion`，从前到后按升温顺序排，温度必须严格递增。
 
 返回对象带四个字段。`model` 只能是 `nth_order_1`、`nth_order_2`、`avrami_2` 或 `contracting_sphere`。`activation_energy_kj_mol` 是表观活化能，单位 kJ/mol。`log10_prefactor_s` 是指前因子按 s⁻¹ 计时后的常用对数。`model_scores` 放四个模型的拟合残差平方和，键用模型名。
 
@@ -32,7 +32,7 @@
 
 请求带 `model`、`activation_energy_kj_mol`、`log10_prefactor_s` 和 `schedule`。升温段用 `type=linear`，再给 `start_temperature_c`、`end_temperature_c`、`beta_k_per_min`；保温段用 `type=isothermal`，再给 `temperature_c`、`time_min`。返回 `{"conversion": 数值}`。
 
-升温段从起始温度一路走到终止温度，保温段从零转化率开始计时。计算时使用请求给出的模型、活化能和指前因子。
+升温段从起始温度一路走到终止温度，`beta_k_per_min` 必须为正且终止温度高于起始温度。保温段从零转化率开始计时，`time_min` 不能为负。计算时使用请求给出的模型、活化能和指前因子。
 
 ## 约束
 

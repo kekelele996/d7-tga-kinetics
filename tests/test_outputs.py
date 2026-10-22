@@ -61,6 +61,16 @@ def request_candidate(payload):
     return json.loads(proc.stdout)
 
 
+def request_failure(payload):
+    """Run an invalid request and return the completed process."""
+    folder = Path(tempfile.mkdtemp(prefix="tga-bad-"))
+    folder.chmod(0o755)
+    path = folder / "request.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    path.chmod(0o644)
+    return run_candidate(path)
+
+
 def clamp_unit(value):
     return min(max(float(value), 1.0e-14), 1.0 - 1.0e-14)
 
@@ -280,6 +290,43 @@ def test_first_point_uses_declared_initial_mass_not_sample_maximum():
     )
 
 
+def test_normalize_preserves_values_outside_endpoints():
+    """「称量抖动让质量略越过两个端点时，保留带符号的数值，不要截断到 0 或 1。」"""
+    got = normalize_case(
+        [
+            {
+                "run_id": "drift",
+                "initial_mass_mg": 10.0,
+                "residual_mass_mg": 2.0,
+                "points": [
+                    {"time_min": i, "temperature_c": 20 + 20 * i, "mass_mg": mass}
+                    for i, mass in enumerate((10.2, 10.0, 6.0, 2.0, 1.8))
+                ],
+            }
+        ]
+    )
+    assert close_list(got["runs"][0]["conversion"], [-0.025, 0.0, 0.5, 1.0, 1.025])
+
+
+def test_equal_initial_and_residual_mass_is_rejected():
+    """「`initial_mass_mg` 必须大于 `residual_mass_mg`，否则按坏请求处理。」"""
+    proc = request_failure(
+        {
+            "operation": "normalize",
+            "runs": [
+                {
+                    "run_id": "bad-baseline",
+                    "initial_mass_mg": 5.0,
+                    "residual_mass_mg": 5.0,
+                    "points": [{"time_min": 0, "temperature_c": 25, "mass_mg": 5.0}],
+                }
+            ],
+        }
+    )
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+
+
 # ---------- difficulty 2: second-based prefactor from K/min heating rates ----------
 
 def test_prefactor_is_second_based_for_first_order_case_a():
@@ -308,6 +355,31 @@ def test_prefactor_is_second_based_for_first_order_case_d():
     got = identify_case(("nth_order_1", 205.0, 15.3, (2.5, 6.0, 12.0, 24.0), 240.0, 450.0))
     assert abs(got["activation_energy_kj_mol"] - 205.0) <= 3.0
     assert abs(got["log10_prefactor_s"] - 15.3) <= 0.32
+
+
+def test_identify_rejects_non_monotonic_temperature():
+    """「温度必须严格递增。」"""
+    proc = request_failure(
+        {
+            "operation": "identify",
+            "runs": [
+                {
+                    "run_id": "bad-order",
+                    "beta_k_per_min": 5.0,
+                    "temperature_c": [100.0, 120.0, 110.0, 140.0],
+                    "conversion": [0.1, 0.2, 0.3, 0.4],
+                },
+                {
+                    "run_id": "ok-order",
+                    "beta_k_per_min": 10.0,
+                    "temperature_c": [100.0, 120.0, 140.0, 160.0],
+                    "conversion": [0.1, 0.2, 0.3, 0.4],
+                },
+            ],
+        }
+    )
+    assert proc.returncode == 2
+    assert proc.stdout == ""
 
 
 # ---------- difficulty 3: model discrimination and schedule prediction ----------
@@ -350,7 +422,7 @@ def test_avrami_linear_schedule_prediction():
 
 
 def test_contracting_sphere_isothermal_prediction():
-    """「保温段从零转化率开始计时。」"""
+    """「保温段从零转化率开始计时，`time_min` 不能为负。」"""
     got = request_candidate(
         {
             "operation": "predict",
@@ -361,3 +433,38 @@ def test_contracting_sphere_isothermal_prediction():
         }
     )
     assert abs(got["conversion"] - 0.397014) <= 0.001
+
+def test_predict_rejects_nonpositive_linear_rate():
+    """「`beta_k_per_min` 必须为正且终止温度高于起始温度。」"""
+    proc = request_failure(
+        {
+            "operation": "predict",
+            "model": "nth_order_1",
+            "activation_energy_kj_mol": 100.0,
+            "log10_prefactor_s": 8.0,
+            "schedule": {
+                "type": "linear",
+                "start_temperature_c": 100.0,
+                "end_temperature_c": 300.0,
+                "beta_k_per_min": 0.0,
+            },
+        }
+    )
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+
+
+def test_predict_rejects_negative_isothermal_time():
+    """「保温段从零转化率开始计时，`time_min` 不能为负。」"""
+    proc = request_failure(
+        {
+            "operation": "predict",
+            "model": "nth_order_1",
+            "activation_energy_kj_mol": 100.0,
+            "log10_prefactor_s": 8.0,
+            "schedule": {"type": "isothermal", "temperature_c": 150.0, "time_min": -1.0},
+        }
+    )
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+

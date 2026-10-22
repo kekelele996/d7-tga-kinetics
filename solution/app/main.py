@@ -175,6 +175,16 @@ def normalize_runs(runs: list[dict]) -> dict:
 def identify_runs(runs: list[dict]) -> dict:
     if len(runs) < 2:
         raise ValueError("identify requires at least two heating-rate runs")
+    for run in runs:
+        beta = float(run["beta_k_per_min"])
+        temperatures = [float(value) for value in run["temperature_c"]]
+        conversions = run["conversion"]
+        if beta <= 0.0:
+            raise ValueError("beta_k_per_min must be positive")
+        if len(temperatures) < 2 or len(temperatures) != len(conversions):
+            raise ValueError("temperature_c and conversion must have equal nonzero length")
+        if any(right <= left for left, right in zip(temperatures, temperatures[1:])):
+            raise ValueError("temperature_c must be strictly increasing")
     fits = {}
     for model in MODEL_NAMES:
         activation_energy, log_prefactor, error = fit_reaction_model(model, runs)
@@ -205,10 +215,14 @@ def predict_conversion(request: dict) -> dict:
         start_k = float(schedule["start_temperature_c"]) + 273.15
         end_k = float(schedule["end_temperature_c"]) + 273.15
         beta_k_s = float(schedule["beta_k_per_min"]) / 60.0
+        if beta_k_s <= 0.0 or end_k <= start_k:
+            raise ValueError("linear schedule requires beta_k_per_min > 0 and end > start")
         extent = prefactor * _temperature_integral(start_k, end_k, activation_energy) / beta_k_s
     elif kind == "isothermal":
         temperature_k = float(schedule["temperature_c"]) + 273.15
         time_s = float(schedule["time_min"]) * 60.0
+        if time_s < 0.0:
+            raise ValueError("time_min must be nonnegative")
         extent = prefactor * _arrhenius(temperature_k, activation_energy) * time_s
     else:
         raise ValueError(f"unknown schedule type: {kind}")
