@@ -23,19 +23,6 @@ def _clamp_unit(value: float) -> float:
     return min(max(float(value), 1.0e-14), 1.0 - 1.0e-14)
 
 
-def reaction_extent(model: str, alpha: float) -> float:
-    a = _clamp_unit(alpha)
-    if model == "nth_order_1":
-        return -math.log1p(-a)
-    if model == "nth_order_2":
-        return a / (1.0 - a)
-    if model == "avrami_2":
-        return math.sqrt(-math.log1p(-a))
-    if model == "contracting_sphere":
-        return 1.0 - (1.0 - a) ** (1.0 / 3.0)
-    raise ValueError(f"unknown reaction model: {model}")
-
-
 def inverse_extent(model: str, extent: float) -> float:
     z = max(float(extent), 0.0)
     if model == "nth_order_1":
@@ -176,7 +163,7 @@ def normalize_runs(runs: list[dict]) -> dict:
         initial = float(run["initial_mass_mg"])
         residual = float(run["residual_mass_mg"])
         removable = initial - residual
-        if removable <= 0.0:
+        if not removable > 0.0:
             raise ValueError("initial_mass_mg must exceed residual_mass_mg")
         conversion = [
             (initial - float(point["mass_mg"])) / removable for point in run["points"]

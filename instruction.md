@@ -12,7 +12,7 @@
 
 ## 要交付的内容
 
-修好 `/app/main.py`，调用方式是 `python3 /app/main.py <请求文件>`。请求是 JSON 对象，靠 `operation` 选处理方式。
+修好 `/app/main.py`，调用方式是 `python3 /app/main.py <请求文件>`。请求是 JSON 对象，靠 `operation` 选处理方式。各返回对象的字段集合固定如下。
 
 ### `normalize`
 
