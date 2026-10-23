@@ -5,23 +5,79 @@
     "test_outputs.py::test_bad_operation_exits_2_without_stdout"
   ],
   "tests": {
-    "test_outputs.py::test_complete_run_reaches_unit_conversion": {"weight": 0.06, "rationale": "难点1 残余质量基线：完整反应段必须准确到 0 和 1，难点合计 0.34"},
-    "test_outputs.py::test_partial_run_uses_declared_residual_mass": {"weight": 0.06, "rationale": "难点1 残余质量基线：反应未完成时仍按声明残余质量归一"},
-    "test_outputs.py::test_multiple_runs_preserve_order_and_ids": {"weight": 0.06, "rationale": "难点1 残余质量基线：多组样品同时归一且顺序稳定"},
-    "test_outputs.py::test_first_point_uses_declared_initial_mass_not_sample_maximum": {"weight": 0.06, "rationale": "难点1 残余质量基线：首点读数有微小偏差时仍以实验初始质量为基准"},
-    "test_outputs.py::test_normalize_preserves_values_outside_endpoints": {"weight": 0.05, "rationale": "难点1 残余质量基线：越界称量抖动保留带符号数值"},
-    "test_outputs.py::test_equal_initial_and_residual_mass_is_rejected": {"weight": 0.05, "rationale": "难点1 残余质量基线：不可归一的总失重必须拒绝"},
-    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_a": {"weight": 0.07, "rationale": "难点2 秒制指前因子：低活化能一级样品，难点合计 0.33"},
-    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_b": {"weight": 0.07, "rationale": "难点2 秒制指前因子：高活化能一级样品"},
-    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_c": {"weight": 0.06, "rationale": "难点2 秒制指前因子：宽升温速率范围"},
-    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_d": {"weight": 0.06, "rationale": "难点2 秒制指前因子：高速升温样品"},
-    "test_outputs.py::test_identify_rejects_non_monotonic_temperature": {"weight": 0.07, "rationale": "难点2 秒制指前因子：温度顺序错误时拒绝拟合"},
-    "test_outputs.py::test_model_selects_second_order_reaction": {"weight": 0.05, "rationale": "难点3 模型判别与外推：二级反应模型识别，难点合计 0.33"},
-    "test_outputs.py::test_model_selects_avrami_erofeev_reaction": {"weight": 0.05, "rationale": "难点3 模型判别与外推：Avrami-Erofeev 模型识别"},
-    "test_outputs.py::test_model_selects_contracting_sphere_reaction": {"weight": 0.05, "rationale": "难点3 模型判别与外推：收缩球模型识别"},
-    "test_outputs.py::test_avrami_linear_schedule_prediction": {"weight": 0.05, "rationale": "难点3 模型判别与外推：按 Avrami 模型计算隐藏线性升温工况"},
-    "test_outputs.py::test_contracting_sphere_isothermal_prediction": {"weight": 0.05, "rationale": "难点3 模型判别与外推：按收缩球模型计算恒温保持"},
-    "test_outputs.py::test_predict_rejects_nonpositive_linear_rate": {"weight": 0.04, "rationale": "难点3 模型判别与外推：非法线性升温速率必须拒绝"},
-    "test_outputs.py::test_predict_rejects_negative_isothermal_time": {"weight": 0.04, "rationale": "难点3 模型判别与外推：负的恒温时间必须拒绝"}
-  }
+    "test_outputs.py::test_complete_run_reaches_unit_conversion": {
+      "weight": 0.06,
+      "rationale": "难点1 残余质量基线：完整反应段必须准确到 0 和 1，难点合计 0.34"
+    },
+    "test_outputs.py::test_partial_run_uses_declared_residual_mass": {
+      "weight": 0.06,
+      "rationale": "难点1 残余质量基线：反应未完成时仍按声明残余质量归一"
+    },
+    "test_outputs.py::test_multiple_runs_preserve_order_and_ids": {
+      "weight": 0.06,
+      "rationale": "难点1 残余质量基线：多组样品同时归一且顺序稳定"
+    },
+    "test_outputs.py::test_first_point_uses_declared_initial_mass_not_sample_maximum": {
+      "weight": 0.06,
+      "rationale": "难点1 残余质量基线：首点读数有微小偏差时仍以实验初始质量为基准"
+    },
+    "test_outputs.py::test_normalize_preserves_values_outside_endpoints": {
+      "weight": 0.05,
+      "rationale": "难点1 残余质量基线：越界称量抖动保留带符号数值"
+    },
+    "test_outputs.py::test_equal_initial_and_residual_mass_is_rejected": {
+      "weight": 0.05,
+      "rationale": "难点1 残余质量基线：不可归一的总失重必须拒绝"
+    },
+    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_a": {
+      "weight": 0.07,
+      "rationale": "难点2 秒制指前因子：低活化能一级样品，难点合计 0.33"
+    },
+    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_b": {
+      "weight": 0.07,
+      "rationale": "难点2 秒制指前因子：高活化能一级样品"
+    },
+    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_c": {
+      "weight": 0.06,
+      "rationale": "难点2 秒制指前因子：宽升温速率范围"
+    },
+    "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_d": {
+      "weight": 0.06,
+      "rationale": "难点2 秒制指前因子：高速升温样品"
+    },
+    "test_outputs.py::test_identify_rejects_non_monotonic_temperature": {
+      "weight": 0.07,
+      "rationale": "难点2 秒制指前因子：温度顺序错误时拒绝拟合"
+    },
+    "test_outputs.py::test_model_selects_second_order_reaction": {
+      "weight": 0.05,
+      "rationale": "难点3 模型判别与外推：二级反应模型识别，难点合计 0.33"
+    },
+    "test_outputs.py::test_model_selects_avrami_erofeev_reaction": {
+      "weight": 0.05,
+      "rationale": "难点3 模型判别与外推：Avrami-Erofeev 模型识别"
+    },
+    "test_outputs.py::test_model_selects_contracting_sphere_reaction": {
+      "weight": 0.05,
+      "rationale": "难点3 模型判别与外推：收缩球模型识别"
+    },
+    "test_outputs.py::test_avrami_linear_schedule_prediction": {
+      "weight": 0.05,
+      "rationale": "难点3 模型判别与外推：按 Avrami 模型计算隐藏线性升温工况"
+    },
+    "test_outputs.py::test_contracting_sphere_isothermal_prediction": {
+      "weight": 0.05,
+      "rationale": "难点3 模型判别与外推：按收缩球模型计算恒温保持"
+    },
+    "test_outputs.py::test_predict_rejects_nonpositive_linear_rate": {
+      "weight": 0.04,
+      "rationale": "难点3 模型判别与外推：非法线性升温速率必须拒绝"
+    },
+    "test_outputs.py::test_predict_rejects_negative_isothermal_time": {
+      "weight": 0.04,
+      "rationale": "难点3 模型判别与外推：负的恒温时间必须拒绝"
+    }
+  },
+  "weight_policy": "business_priority",
+  "normalization": "sum_to_one"
 }

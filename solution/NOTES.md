@@ -38,6 +38,7 @@
 
 ## 权重依据
 
+- `tests/scoring.json` 声明 `weight_policy=business_priority`，按业务影响排序：核心质量基线和最终外推高于输入边界检查。
 - gate 测试（不计分）：入口能跑、错误 operation 的退出码与空标准输出。
 - difficulty_1 合计 0.34：质量归一决定后续所有动力学参数，权重最高。
 - difficulty_2 合计 0.33：秒制换算决定指前因子的物理量纲与外推可信度。
