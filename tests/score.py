@@ -139,8 +139,20 @@ def case_id(node: ET.Element) -> str:
 
 def summarize(config_path: Path, junit: Path, report_out: Path, reward_out: Path) -> int:
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    if config.get("weight_policy") != "business_priority":
-        raise ValueError("scoring weight_policy must be business_priority")
+    policy = config.get("weight_policy")
+    if isinstance(policy, str):
+        policy_mode = policy
+    elif isinstance(policy, dict):
+        policy_mode = (
+            policy.get("mode")
+            or policy.get("type")
+            or policy.get("strategy")
+            or policy.get("scheme")
+        )
+    else:
+        policy_mode = None
+    if policy_mode != "business_priority":
+        raise ValueError("scoring weight_policy must use business_priority")
     gates = list(config["gate_tests"])
     weights = {key: float(value["weight"]) for key, value in config["tests"].items()}
     total_weight = math.fsum(weights.values())

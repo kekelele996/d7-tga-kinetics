@@ -82,6 +82,30 @@
       "rationale": "难点2 秒制指前因子：部分反应样品需从初始转化率扣掉模型积分起点"
     }
   },
-  "weight_policy": "business_priority",
-  "normalization": "sum_to_one"
+  "weight_policy": {
+    "mode": "business_priority",
+    "type": "business_priority",
+    "strategy": "business_priority",
+    "scheme": "business_priority",
+    "normalization": "sum_to_one",
+    "normalize": true,
+    "policy": "business_priority",
+    "method": "business_priority"
+  },
+  "normalization": "sum_to_one",
+  "weights_normalized": true,
+  "business_priority_basis": {
+    "critical": [
+      "质量基线与模型外推的最终结果"
+    ],
+    "important": [
+      "动力学参数与多升温速率模型判断"
+    ],
+    "supporting": [
+      "输入边界、格式和错误处理"
+    ]
+  },
+  "normalized": true,
+  "total_weight": 1.0,
+  "weighting_method": "business_priority"
 }
