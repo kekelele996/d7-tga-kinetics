@@ -90,7 +90,8 @@
     "normalization": "sum_to_one",
     "normalize": true,
     "policy": "business_priority",
-    "method": "business_priority"
+    "method": "business_priority",
+    "version": 1
   },
   "normalization": "sum_to_one",
   "weights_normalized": true,

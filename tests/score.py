@@ -153,6 +153,8 @@ def summarize(config_path: Path, junit: Path, report_out: Path, reward_out: Path
         policy_mode = None
     if policy_mode != "business_priority":
         raise ValueError("scoring weight_policy must use business_priority")
+    if isinstance(policy, dict) and policy.get("version") != 1:
+        raise ValueError("scoring weight_policy.version must be 1")
     gates = list(config["gate_tests"])
     weights = {key: float(value["weight"]) for key, value in config["tests"].items()}
     total_weight = math.fsum(weights.values())
