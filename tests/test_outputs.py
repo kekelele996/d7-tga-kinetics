@@ -114,7 +114,15 @@ def thermal_integral(start_c, end_c, activation_energy, intervals=32):
     return total * step / 3.0
 
 
-def multirate_runs(model, activation_energy, log_prefactor, betas, start_c, end_c):
+def multirate_runs(
+    model,
+    activation_energy,
+    log_prefactor,
+    betas,
+    start_c,
+    end_c,
+    initial_conversion=0.0,
+):
     runs = []
     points = 160
     for run_index, beta in enumerate(betas):
@@ -130,7 +138,11 @@ def multirate_runs(model, activation_energy, log_prefactor, betas, start_c, end_
         selected_temperature = []
         selected_conversion = []
         for index, (temperature, integral) in enumerate(zip(temperatures, cumulative)):
-            alpha = inverse_extent(model, 10.0 ** log_prefactor * integral / (beta / 60.0))
+            alpha = inverse_extent(
+                model,
+                extent(model, initial_conversion)
+                + 10.0 ** log_prefactor * integral / (beta / 60.0),
+            )
             alpha += 4.0e-5 * math.sin((run_index + 1) * 0.71 + index * 1.3)
             if 0.01 < alpha < 0.99 and index % 2 == 0:
                 selected_temperature.append(temperature)
@@ -141,17 +153,27 @@ def multirate_runs(model, activation_energy, log_prefactor, betas, start_c, end_
                 "beta_k_per_min": beta,
                 "temperature_c": selected_temperature,
                 "conversion": selected_conversion,
+                "initial_conversion": initial_conversion,
             }
         )
     return runs
 
 
 def identify_case(case):
-    model, activation_energy, log_prefactor, betas, start_c, end_c = case
+    model, activation_energy, log_prefactor, betas, start_c, end_c = case[:6]
+    initial_conversion = case[6] if len(case) > 6 else 0.0
     return request_candidate(
         {
             "operation": "identify",
-            "runs": multirate_runs(model, activation_energy, log_prefactor, betas, start_c, end_c),
+            "runs": multirate_runs(
+                model,
+                activation_energy,
+                log_prefactor,
+                betas,
+                start_c,
+                end_c,
+                initial_conversion,
+            ),
         }
     )
 
@@ -238,7 +260,7 @@ def test_partial_run_uses_declared_residual_mass():
 
 
 def test_multiple_runs_preserve_order_and_ids():
-    """「输出顺序照输入走，`conversion` 与同一次实验的 `points` 一一对应。」"""
+    """「输出顺序按输入来，`conversion` 跟同一次实验的 `points` 对齐。」"""
     got = normalize_case(
         [
             {
@@ -267,7 +289,7 @@ def test_multiple_runs_preserve_order_and_ids():
 
 
 def test_first_point_uses_declared_initial_mass_not_sample_maximum():
-    """「输出顺序照输入走，`conversion` 与同一次实验的 `points` 一一对应。」"""
+    """「输出顺序按输入来，`conversion` 跟同一次实验的 `points` 对齐。」"""
     got = normalize_case(
         [
             {
@@ -358,7 +380,7 @@ def test_prefactor_is_second_based_for_first_order_case_d():
 
 
 def test_identify_rejects_non_monotonic_temperature():
-    """「温度必须严格递增。」"""
+    """「温度倒退的记录不收。」"""
     proc = request_failure(
         {
             "operation": "identify",
@@ -380,6 +402,15 @@ def test_identify_rejects_non_monotonic_temperature():
     )
     assert proc.returncode == 2
     assert proc.stdout == ""
+
+
+def test_prefactor_with_nonzero_initial_conversion():
+    """「有些样品送到仪器前已经反应了一部分，`initial_conversion` 就是那个起点。」"""
+    got = identify_case(
+        ("nth_order_1", 132.0, 10.1, (1.2, 3.5, 9.0, 20.0), 130.0, 360.0, 0.18)
+    )
+    assert abs(got["activation_energy_kj_mol"] - 132.0) <= 3.5
+    assert abs(got["log10_prefactor_s"] - 10.1) <= 0.32
 
 
 # ---------- difficulty 3: model discrimination and schedule prediction ----------

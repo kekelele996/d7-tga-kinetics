@@ -30,23 +30,23 @@
       "rationale": "难点1 残余质量基线：不可归一的总失重必须拒绝"
     },
     "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_a": {
-      "weight": 0.07,
+      "weight": 0.06,
       "rationale": "难点2 秒制指前因子：低活化能一级样品，难点合计 0.33"
     },
     "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_b": {
-      "weight": 0.07,
+      "weight": 0.06,
       "rationale": "难点2 秒制指前因子：高活化能一级样品"
     },
     "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_c": {
-      "weight": 0.06,
+      "weight": 0.05,
       "rationale": "难点2 秒制指前因子：宽升温速率范围"
     },
     "test_outputs.py::test_prefactor_is_second_based_for_first_order_case_d": {
-      "weight": 0.06,
+      "weight": 0.05,
       "rationale": "难点2 秒制指前因子：高速升温样品"
     },
     "test_outputs.py::test_identify_rejects_non_monotonic_temperature": {
-      "weight": 0.07,
+      "weight": 0.06,
       "rationale": "难点2 秒制指前因子：温度顺序错误时拒绝拟合"
     },
     "test_outputs.py::test_model_selects_second_order_reaction": {
@@ -76,6 +76,10 @@
     "test_outputs.py::test_predict_rejects_negative_isothermal_time": {
       "weight": 0.04,
       "rationale": "难点3 模型判别与外推：负的恒温时间必须拒绝"
+    },
+    "test_outputs.py::test_prefactor_with_nonzero_initial_conversion": {
+      "weight": 0.05,
+      "rationale": "难点2 秒制指前因子：部分反应样品需从初始转化率扣掉模型积分起点"
     }
   },
   "weight_policy": "business_priority",

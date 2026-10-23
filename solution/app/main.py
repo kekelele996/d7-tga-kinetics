@@ -23,6 +23,20 @@ def _clamp_unit(value: float) -> float:
     return min(max(float(value), 1.0e-14), 1.0 - 1.0e-14)
 
 
+def model_extent(model: str, alpha: float) -> float:
+    """Return g(alpha) for the selected reaction model."""
+    a = _clamp_unit(alpha)
+    if model == "nth_order_1":
+        return -math.log1p(-a)
+    if model == "nth_order_2":
+        return a / (1.0 - a)
+    if model == "avrami_2":
+        return math.sqrt(-math.log1p(-a))
+    if model == "contracting_sphere":
+        return 1.0 - (1.0 - a) ** (1.0 / 3.0)
+    raise ValueError(f"unknown reaction model: {model}")
+
+
 def inverse_extent(model: str, extent: float) -> float:
     z = max(float(extent), 0.0)
     if model == "nth_order_1":
@@ -87,14 +101,21 @@ def _best_log_prefactor(
             value / beta_k_s
             for value in _cumulative_integral(temperatures, activation_energy_kj_mol)
         ]
-        prepared.append((extents, [float(value) for value in run["conversion"]]))
+        alpha0 = float(run.get("initial_conversion", 0.0))
+        prepared.append(
+            (
+                extents,
+                model_extent(model, alpha0),
+                [float(value) for value in run["conversion"]],
+            )
+        )
 
     def objective(log_prefactor: float) -> float:
         prefactor = 10.0 ** log_prefactor
         squared_error = 0.0
-        for extents, observed_values in prepared:
+        for extents, offset, observed_values in prepared:
             for extent, observed in zip(extents, observed_values):
-                residual = inverse_extent(model, prefactor * extent) - observed
+                residual = inverse_extent(model, offset + prefactor * extent) - observed
                 squared_error += residual * residual
         return squared_error
 
@@ -185,6 +206,9 @@ def identify_runs(runs: list[dict]) -> dict:
             raise ValueError("temperature_c and conversion must have equal nonzero length")
         if any(not right > left for left, right in zip(temperatures, temperatures[1:])):
             raise ValueError("temperature_c must be strictly increasing")
+        alpha0 = float(run.get("initial_conversion", 0.0))
+        if not 0.0 <= alpha0 < 1.0:
+            raise ValueError("initial_conversion must be in [0, 1)")
     fits = {}
     for model in MODEL_NAMES:
         activation_energy, log_prefactor, error = fit_reaction_model(model, runs)
